@@ -1,5 +1,15 @@
--- Initial schema is created from SQLAlchemy metadata at backend startup.
--- claims: code unique, label nullable (0 normal, 1 anomaly).
--- trainings: frozen snapshot and holdout output JSON.
--- reviews: training_id / claim_id foreign keys with unique source pair.
--- Exact portable schema: src/models/entities.py.
+-- 初始架构由 SQLAlchemy metadata 在 backend 启动时建立，精确可移植定义见
+-- src/models/entities.py。以下为标注可靠性校准相关表的语义说明。
+--
+-- claims:        code 唯一；label 可空（0 正常，1 异常）。
+-- opinions:      独立意见。唯一约束 (claim_id, annotator)，同一票据同一财务只保留最新一版；
+--                revision 递增。batch 提交时冻结，不随更正改写既有批次。
+-- opinion_revisions: 追加式修订记录，保留每次录入/更正的值与录入人。
+-- gold_standards: 少量已确认金标准（claim_id 唯一），只用于锚定方向与评估标注者，
+--                不进入训练留出评估。
+-- calibrations:  name/state/attempts/error/result/snapshot/snapshot_hash。
+--                state: queued→running→done/failed；失败重试沿用同一 snapshot，
+--                attempts 累加而意见不重复累计。
+-- trainings:     冻结 snapshot 与可选 calibration 快照；result JSON 保存留出指标、
+--                系数、软标签使用清单与 checksum。
+-- reviews:       training_id / claim_id 外键，唯一来源对。
